@@ -31,7 +31,7 @@ app.post('/image-caption', upload.single('image'), async (req, res) => {
 
     const response = await inference.imageToText({
       data: imageBlob,
-      model: 'nlpconnect/vit-gpt2-image-captioning'
+      model: 'Salesforce/blip-image-captioning-base'
     });
 
     fs.unlinkSync(imagePath); // Clean up the uploaded file
