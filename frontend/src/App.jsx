@@ -10,22 +10,33 @@ function App() {
   const [cameraOpen, setCameraOpen] = useState(false);
   const webcamRef = useRef(null);
 
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [transcription, setTranscription] = useState('');
+
   const inputHandler = (event) => {
+    setCameraOpen(false);
     setRemPara(true);
     setFile(event.target.files[0]);
   };
 
-  const captureHandler = () => {
-    const imageSrc = webcamRef.current.getScreenshot();
+  const captureHandler = async () => {
+    const imageSrc = await webcamRef.current.getScreenshot();
     const blob = dataURLtoFile(imageSrc, 'captured_image.png');
-    console.log(blob)
+    console.log(blob);
+    setRemPara(true);
     setFile(blob);
     setCameraOpen(false);
   };
 
+  const handleCamera = () => {
+    setRemPara(false);
+    setCaption(''); // Clear the previous caption
+    setCameraOpen(true);
+  };
+
   const submitHandler = async (event) => {
     event.preventDefault();
-    setRemPara(false);
+    setRemPara(true);
     setLoading(true);
     const formData = new FormData();
     formData.append('image', file);
@@ -36,6 +47,7 @@ function App() {
           'Content-Type': 'multipart/form-data'
         }
       });
+      setRemPara(false);
       setLoading(false);
       setCaption(response.data.generated_text);
     } catch (error) {
@@ -56,6 +68,35 @@ function App() {
     return new File([u8arr], filename, { type: mime });
   };
 
+
+  //video uploading
+  const videoHandler =(event)=>{
+    setSelectedFile(event.target.files[0]);
+  }
+  const videoSubmitHander=async(event)=>{
+    event.preventDefault();
+    if (!selectedFile) {
+      alert('Please select a file first!');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('video', selectedFile);
+
+    try {
+      const response = await axios.post('http://localhost:3001/process-video', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log(response.data.text)
+      setTranscription(response.data.text);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('Error uploading file');
+    }
+  }
+
   return (
     <>
       <div className='flex justify-center text-3xl text-slate-800 mb-6 pt-10'>
@@ -75,18 +116,27 @@ function App() {
           <button
             type='button'
             className='text-white bg-slate-800 p-1 rounded-md max-w-xs font-semibold justify-center'
-            onClick={() => setCameraOpen(true)}
+            onClick={handleCamera}
           >
             Open Camera
           </button>
           <button
-          disabled={!file}
+            disabled={!file}
             type='submit'
             className='text-white bg-slate-800 p-1 rounded-md max-w-xs font-semibold justify-center'
           >
             {loading ? 'Analysing' : 'Upload'}
           </button>
         </div>
+      </form>
+      <form onSubmit={videoSubmitHander} className='mt-6'>
+        <div className='container border shadow-md flex flex-col gap-4 p-6'>
+            <div>Face recognition</div>
+            <div>
+              <input type='file' accept='video/*' id='video' onChange={videoHandler}/>
+              <button className='text-white bg-slate-800 p-1 rounded-md max-w-xs font-semibold justify-center' >upload Video</button>
+            </div>
+          </div>
       </form>
       {cameraOpen && (
         <div className='mt-4'>
@@ -113,8 +163,16 @@ function App() {
           />
         </div>
       )}
-      {remPara ? "" : caption && (
+      {!remPara && caption && (
         <div className='mt-4 text-lg text-slate-800'>{caption}</div>
+      )}
+      
+      {/* video transcription */}
+      {transcription && (
+        <div>
+          <h2>Transcription:</h2>
+          <p>{transcription}</p>
+        </div>
       )}
     </>
   );
