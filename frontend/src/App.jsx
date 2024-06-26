@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import Webcam from 'react-webcam';
+import FileUpload from './components/FileUpload';
+import AskQuestion from './components/AskQuestion';
 
 function App() {
   const [file, setFile] = useState(null);
@@ -12,6 +14,9 @@ function App() {
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [transcription, setTranscription] = useState('');
+
+  const [uploadMessage, setUploadMessage] = useState('');
+  const [answer, setAnswer] = useState('');
 
   const inputHandler = (event) => {
     setCameraOpen(false);
@@ -97,16 +102,27 @@ function App() {
     }
   }
 
+  const handleUploadSuccess = (message) => {
+    setUploadMessage(message);
+    setAnswer('');
+  };
+
+  const handleAnswer = (answer) => {
+    setAnswer(answer);
+  };
+
   return (
     <>
-      <div className='flex justify-center text-3xl text-slate-800 mb-6 pt-10'>
+      <div className='flex justify-center text-3xl text-slate-800 mb-6 pt-10 m-5'>
         Model Testing
       </div>
       <form onSubmit={submitHandler}>
         <div className='flex flex-col gap-4 container border shadow-md p-3'>
-          <label className='text-lg font-semibold text-slate-600'>
-            Upload Image or Capture with Camera
-          </label>
+          <div className='flex justify-center '>
+            <label className=' text-lg font-semibold text-white text-center shadow-md max-w-sm bg-emerald-700 rounded-sm px-6'>
+              Upload Image or Capture with Camera
+            </label>
+          </div>
           <input
             type='file'
             accept='image/*'
@@ -130,12 +146,30 @@ function App() {
         </div>
       </form>
       <form onSubmit={videoSubmitHander} className='mt-6'>
-        <div className='container border shadow-md flex flex-col gap-4 p-6'>
-            <div>Face recognition</div>
+        <div className='container border shadow-md flex flex-col gap-4 p-3'>
+            <div className='flex justify-center '>
+              <label className='text-lg text-white bg-emerald-800 font-semibold rounded-sm shadow-md max-w-sm text-center px-6 '>Video Analysis</label>
+            </div>
             <div>
               <input type='file' accept='video/*' id='video' onChange={videoHandler}/>
               <button className='text-white bg-slate-800 p-1 rounded-md max-w-xs font-semibold justify-center' >upload Video</button>
             </div>
+          </div>
+      </form>
+      <form>
+          <div className="max-w-6xl mx-auto p-4 container shadow-md mt-4 bg-slate-100 mb-6">
+          <div className='flex justify-center'>
+            <h1 className="text-lg text-white bg-emerald-800 font-semibold text-center max-w-sm rounded-sm mb-4 px-6 ">Upload and Ask</h1>
+          </div>
+          <FileUpload onUploadSuccess={handleUploadSuccess} />
+          {uploadMessage && <p className="mt-2 text-slate-800">{uploadMessage}</p>}
+          <AskQuestion onAnswer={handleAnswer} />
+          {answer && (
+            <div className="mt-4 p-4 border border-gray-300 rounded-md">
+              <h2 className="text-xl font-bold">Answer:</h2>
+              <p>{answer}</p>
+            </div>
+          )}
           </div>
       </form>
       {cameraOpen && (

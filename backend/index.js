@@ -8,6 +8,7 @@ import cors from 'cors';
 import ffmpeg from 'fluent-ffmpeg';
 import axiosRetry from 'axios-retry';
 import { fileURLToPath } from 'url';
+import pdfParse from 'pdf-parse';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,7 +16,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = 3001;
 app.use(cors());
-app.use(express.json()); // Middleware to parse JSON bodies
+app.use(express.json());
 
 const HF_TOKEN = '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';
 const OPEN_API = '';
@@ -133,7 +134,7 @@ async function analyzeFrame(base64Image) {
     console.log('Response Status:', response.status);
     console.log('Response Data:', response.data);
 
-    return response.data;
+    return JSON.stringify(response.data); // Convert the object to a string
   } catch (error) {
     console.error('Error analyzing frame:', error);
     throw error;
@@ -170,7 +171,7 @@ async function generateDescription(analysisResult) {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: 'text-davinci-002', // Adjusted to a valid OpenAI model
+        model: 'gpt-4', // Use GPT-4 for better results
         messages: [
           {
             role: 'user',
@@ -201,17 +202,40 @@ async function generateDescription(analysisResult) {
   }
 }
 
-// Endpoint for uploading data
-app.post('/upload', upload.single('file'), (req, res) => {
-  const filePath = path.join(__dirname, req.file.path);
-  fs.readFile(filePath, 'utf8', (err, data) => {
-    if (err) {
-      res.status(500).json({ error: 'Failed to read the file' });
-      return;
+// Function to extract text from file (handles PDF and plain text)
+function extractTextFromFile(filePath, fileType) {
+  return new Promise((resolve, reject) => {
+    if (fileType === 'application/pdf') {
+      const dataBuffer = fs.readFileSync(filePath);
+      pdfParse(dataBuffer).then(function (data) {
+        resolve(data.text);
+      }).catch(err => {
+        reject(err);
+      });
+    } else {
+      fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(data);
+        }
+      });
     }
+  });
+}
+
+// Endpoint for uploading data
+app.post('/upload', upload.single('file'), async (req, res) => {
+  const filePath = path.join(__dirname, req.file.path);
+  const fileType = req.file.mimetype;
+
+  try {
+    const data = await extractTextFromFile(filePath, fileType);
     req.app.locals.data = data;
     res.status(200).json({ message: 'File uploaded successfully' });
-  });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read the file' });
+  }
 });
 
 // Endpoint for asking questions
@@ -225,23 +249,25 @@ app.post('/ask', async (req, res) => {
   }
 
   try {
-    const response = await retryAsync(async () => {
-      return await axios.post(
-        'https://api-inference.huggingface.co/models/distilbert/distilbert-base-uncased-distilled-squad',
-        {
-          inputs: {
-            question: question,
-            context: context,
-          },
+    const response = await axios.post(
+      'https://api-inference.huggingface.co/models/deepset/bert-large-uncased-whole-word-masking-squad2',
+      {
+        inputs: {
+          question: question,
+          context: context,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${HF_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-    }, 5);
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${HF_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.data || !response.data.answer) {
+      throw new Error('Unexpected response structure from Hugging Face API');
+    }
 
     const answer = response.data.answer;
     res.status(200).json({ answer: answer });
