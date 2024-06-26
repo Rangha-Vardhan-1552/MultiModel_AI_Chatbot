@@ -9,6 +9,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import axiosRetry from 'axios-retry';
 import { fileURLToPath } from 'url';
 import pdfParse from 'pdf-parse';
+import mammoth from 'mammoth';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -228,17 +229,47 @@ async function extractTextFromFile(filePath, fileType) {
   });
 }
 
-// Endpoint for uploading data
-app.post('/upload', upload.single('file'), async (req, res) => {
-  const filePath = path.join(__dirname, req.file.path);
-  const fileType = req.file.mimetype;
+// Endpoint for listing uploaded files
+app.get('/files', (req, res) => {
+  const uploadedFiles = req.app.locals.uploadedFiles || [];
+  res.status(200).json({ files: uploadedFiles });
+});
+
+// Endpoint for removing an uploaded file
+// Endpoint for removing an uploaded file
+app.delete('/files/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(__dirname, 'uploads', filename);
 
   try {
-    const data = await extractTextFromFile(filePath, fileType);
-    req.app.locals.data = data;
-    res.status(200).json({ message: 'File uploaded successfully' });
+    fs.removeSync(filePath);
+    req.app.locals.uploadedFiles = req.app.locals.uploadedFiles.filter(file => file !== filename);
+    res.status(200).json({ message: 'File removed successfully' });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to read the file' });
+    res.status(500).json({ error: 'Failed to remove the file' });
+  }
+});
+
+// Endpoint for uploading multiple files
+// Endpoint for uploading multiple files
+app.post('/upload', upload.array('files'), async (req, res) => {
+  const filePaths = req.files.map(file => path.join(__dirname, file.path));
+  const fileTypes = req.files.map(file => file.mimetype);
+  const fileNames = req.files.map(file => file.filename);
+
+  try {
+    const texts = await Promise.all(filePaths.map((filePath, index) => extractTextFromFile(filePath, fileTypes[index])));
+
+    // Concatenate texts with some separator or marker between files
+    const concatenatedText = texts.join('\n\n=== FILE BREAK ===\n\n');
+
+    req.app.locals.data = concatenatedText;
+    req.app.locals.uploadedFiles = fileNames;
+
+    res.status(200).json({ message: 'Files uploaded successfully', files: fileNames });
+  } catch (err) {
+    console.error('Error uploading files:', err);
+    res.status(500).json({ error: 'Failed to read the files' });
   }
 });
 
@@ -281,7 +312,9 @@ app.post('/ask', async (req, res) => {
   }
 });
 
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+

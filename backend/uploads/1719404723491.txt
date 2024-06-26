@@ -1,0 +1,46 @@
+Grav Application,
+Create Chatbot for application
+Integrate Grav App with cloudflare services
+fetch details from Google location API for Analysis
+Job Portal Application
+Phi3 model trained on Wikipedia data
+create model for face expression,object detection,heatmap analysis on retail store.
+create VEYE website and integrate Razorpay for spects services
+create purviewAllInOne Website
+criminal detection through webcam/survilliance
+
+appname                   lastRemark                            latency                      	    percentage
+
+GravApp      		add recent features			No latency				80%
+
+Create Chatbot for 	UI changes related to header		No latency				95%
+application
+
+fetch details from   	No remarks			        No latency				done
+Google location API
+for Analysis
+
+Job Portal Application  No remarks				No latency	     			done
+
+Phi3 Model Trained on   No remarks				no latency     				done	
+Wikipedia	
+
+create model for face 	No remarks				No latency				done
+expression,object 
+detection,heatmap 
+analysis on retail 
+store.		
+
+create VEYE website	Test on live transcation		No latency 				80%
+and integrate 		in razor pay
+Razorpay for 
+spects services
+
+create purviewAllInOne 	No remarks				No latency				up to date
+Website
+
+criminal detection 	Try with survilliance			camera latency				70%
+through webcam/survilliance
+
+
+				
