@@ -202,17 +202,19 @@ async function generateDescription(analysisResult) {
   }
 }
 
-// Function to extract text from file (handles PDF and plain text)
-function extractTextFromFile(filePath, fileType) {
+// Function to extract text from file (handles PDF, DOCX, and plain text)
+async function extractTextFromFile(filePath, fileType) {
   return new Promise((resolve, reject) => {
     if (fileType === 'application/pdf') {
       const dataBuffer = fs.readFileSync(filePath);
-      pdfParse(dataBuffer).then(function (data) {
-        resolve(data.text);
-      }).catch(err => {
-        reject(err);
-      });
-    } else {
+      pdfParse(dataBuffer)
+        .then(data => resolve(data.text))
+        .catch(err => reject(err));
+    } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') { // DOCX file
+      mammoth.extractRawText({ path: filePath })
+        .then(result => resolve(result.value))
+        .catch(err => reject(err));
+    } else if (fileType === 'text/plain') { // Plain text file
       fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {
           reject(err);
@@ -220,6 +222,8 @@ function extractTextFromFile(filePath, fileType) {
           resolve(data);
         }
       });
+    } else {
+      reject(new Error('Unsupported file type'));
     }
   });
 }

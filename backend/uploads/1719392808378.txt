@@ -1,0 +1,63 @@
+Good Morning Everyone!
+thank you for giving this opportunity to introduce my self.
+
+My name is rangha vardhan from cbit in the specialization of computer science and Engg(AIML)
+iam so Enthusiastic in these fields and  motivated full stack developer.
+My interests are utilizing the latest technologies and improve mu skills whichs will  helps in growth of my career.
+
+coming to education qualification
+i  secured 8.3 cgpa in B.E
+
+coming to internships 
+Iam currently doing the internship in purview services as a full stack developer .
+it is  3 months of duration and about to complete.
+during this  period i worked on various fields like AIML models and Develop the Web application related to company aligned project 
+
+Worked on AIML models and tasks :
+create  the model that has face recognition and object detection and heat map analysis on the retails store  to improve the  user customer experience.
+criminal detection model created by using the  models like tinyface detector,facelandmark68Net,face recognitionNet,ssdMobileNetV1.
+and also I worked on phi3  and mistral llm models.
+
+lets I  want to share my one of my achievement in purview that ,Actually the phi3 models are pretrained models like it trained on large amout of data , we also custom trained on particular data.so l trained the phi3 model with Wikipedia  data and got accuracy of 92% .it almost takes 2 days to train that data by using the t4GPU.
+
+Iam  working  on developing the two  web application related to companies project.
+
+
+another internship is  Ameya Intelligent machine labs as  software developer intern in designation of frontend developer.
+mostly I used  to work on create the UI layouts in more responsive and based on client requirement.
+Maintain the interaction between the UI and Backend RestAPIs
+
+coming to projects:
+rectently i did the criminal detection web application  which is used to detect the criminal duing the live video.
+through application we can able to add the criminal records to database,and able to see the dashboard of criminal records in application
+this  system identifies individually and matches them against database of known criminal. if it detects then it captures their image  continuously until  present in webcam boundaries,and provide alert sound.
+ 
+Tech Stack Used:React, FaceAPI.js, Firestorage, Firebase Authentication, Media Devices API, HTML5 Canvas
+
+job portal web application:
+Basically I used MERN STACK to make this application ,in Application contains 
+provided login and signup based on the roles,Using JWT Token  for proper authentication and authorization  of users.
+mainly two role applicant/ recruiter.
+recruiter is able to  perform different operation like create ,delete ,update the jobs  and also review the application of applicant , download the resume of applicant ,also able to to shorlist or reject the application.
+ 
+the role of applicant is able to see the list of jobs which is posted by recruiters and able to see the job description,and apply for the job.
+perform search with various filters
+Tech Stack Used: MongoDB, Express.js, React.js, Node.js, Tailwind CSS
+
+Estate MERN Application: 
+Basically I used MERN STACK to make this application, 
+the main aim of this project is to use to make the user friendly interface for realEstates and users,which realestate  persons are able to provide the listing of houses, and users are able to see those listing on dashboard.
+once the user is likes anthing then can able to contact through email.
+Important feature like :
+upadating user profile 
+secure user authentication using JWT token to ensure data privacy
+And also provide the Oauth authentication ,allowing the user to login with google for seamless and secure login experience.
+
+Tech Stack Used: MongoDB, Express.js, React.js, Node.js, Tailwind CSS, OAuth using firebase.
+
+
+
+
+
+
+
