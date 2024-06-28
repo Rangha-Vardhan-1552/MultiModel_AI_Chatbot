@@ -174,7 +174,7 @@ function App() {
             {uploadedFiles.map((fileName, index) => (
               <div className='mt-8' key={index}>
                 <li>
-                  <span className='text-white p-3 bg-sky-600 font-semibold rounded-md shadow-sm '>{fileName}</span>
+                  <span className='text-white p-3 bg-sky-600 font-semibold rounded-md shadow-sm flex flex-wrap '>{fileName}</span>
                 </li>
               </div>
             ))}

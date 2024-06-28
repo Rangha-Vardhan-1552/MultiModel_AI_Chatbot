@@ -1,3 +1,4 @@
+// Import necessary modules
 import express from 'express';
 import axios from 'axios';
 import { HfInference } from '@huggingface/inference';
@@ -21,8 +22,8 @@ const port = 3001;
 app.use(cors());
 app.use(express.json());
 
-const HF_TOKEN = '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';
-
+// const HF_TOKEN = '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';
+const HF_TOKEN = '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 '
 // Configure multer for file upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -115,11 +116,56 @@ app.post('/upload', upload.array('files'), async (req, res) => {
   }
 });
 
+// Function to summarize text in chunks
+async function summarizeText(text) {
+  const chunkSize = 2000; // Define a reasonable chunk size for the summarization model
+  const chunks = [];
+
+  for (let i = 0; i < text.length; i += chunkSize) {
+    chunks.push(text.substring(i, i + chunkSize));
+  }
+
+  try {
+    const summarizedChunks = await Promise.all(chunks.map(async (chunk) => {
+      const response = await axios.post(
+        'https://api-inference.huggingface.co/models/facebook/bart-large-cnn',
+        {
+          inputs: chunk,
+          parameters: {
+            max_length: 200, // Set the maximum length for each chunk's summary
+            min_length: 50,  // Set the minimum length for each chunk's summary
+            do_sample: true, // Enable sampling for more diverse summaries
+            top_k: 50,       // Limit the sampling pool to the top 50 logits
+            top_p: 0.95,     // Use nucleus sampling with cumulative probability of 0.95
+          }
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${HF_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.data || !response.data[0].summary_text) {
+        throw new Error('Unexpected response structure from Hugging Face API');
+      }
+
+      return response.data[0].summary_text;
+    }));
+
+    return summarizedChunks.join(' ');
+
+  } catch (error) {
+    console.error('Error summarizing text:', error.response ? error.response.data : error.message);
+    throw new Error('Failed to summarize text');
+  }
+}
+
 // Endpoint for asking questions
 app.post('/ask', async (req, res) => {
   const question = req.body.question;
   const context = req.app.locals.data;
-  console.log(context)
 
   if (!context) {
     res.status(400).json({ error: 'No data uploaded' });
@@ -127,12 +173,16 @@ app.post('/ask', async (req, res) => {
   }
 
   try {
+    // Summarize the context before passing it to the QA model
+    const summarizedContext = await summarizeText(context);
+    console.log(summarizedContext)
+
     const response = await axios.post(
-      'https://api-inference.huggingface.co/models/deepset/bert-large-uncased-whole-word-masking-squad2',
+      'https://api-inference.huggingface.co/models/distilbert/distilbert-base-uncased-distilled-squad',
       {
         inputs: {
           question: question,
-          context: context,
+          context: summarizedContext,
         },
       },
       {
@@ -143,6 +193,8 @@ app.post('/ask', async (req, res) => {
       }
     );
 
+    console.log('QA Response:', response.data);
+
     if (!response.data || !response.data.answer) {
       throw new Error('Unexpected response structure from Hugging Face API');
     }
@@ -150,7 +202,7 @@ app.post('/ask', async (req, res) => {
     const answer = response.data.answer;
     res.status(200).json({ answer: answer });
   } catch (error) {
-    console.error('Error fetching answer:', error);
+    console.error('Error fetching answer:', error.response ? error.response.data : error.message);
     res.status(500).json({ error: 'Failed to get answer from the model' });
   }
 });
