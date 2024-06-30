@@ -203,7 +203,7 @@ app.post('/ask', async (req, res) => {
     res.status(200).json({ answer: answer });
   } catch (error) {
     console.error('Error fetching answer:', error.response ? error.response.data : error.message);
-    res.status(500).json({ error: 'Failed to get answer from the model' });
+    res.status(500).json({ answer: 'Failed to get answer from the model' });
   }
 });
 
